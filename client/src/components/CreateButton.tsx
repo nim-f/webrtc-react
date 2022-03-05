@@ -2,9 +2,9 @@ import { useContext } from "react";
 import { RoomContext } from "../context/RoomContext";
 
 export const Join: React.FC = () => {
-    const { ws } = useContext(RoomContext);
+    const { ws, me } = useContext(RoomContext);
     const createRoom = () => {
-        ws.emit("create-room");
+        ws.emit("create-room", { peerId: me._id });
     };
     return (
         <button

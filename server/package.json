@@ -16,6 +16,7 @@
     "@types/uuid": "^8.3.4",
     "express": "^4.17.3",
     "socket.io": "^4.4.1",
+    "uui": "^1.0.7",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
