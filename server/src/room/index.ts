@@ -2,16 +2,22 @@ import { Socket } from "socket.io";
 import { v4 as uuidV4 } from "uuid";
 
 const rooms: Record<string, string[]> = {};
+const chats: Record<string, IMessage[]> = {};
 
 interface IRoomParams {
     roomId: string;
     peerId: string;
 }
-
+interface IMessage {
+    content: string;
+    author: string;
+    timestamp: string;
+}
 export const roomHandler = (socket: Socket) => {
     const createRoom = () => {
         const roomId = uuidV4();
         rooms[roomId] = [];
+        chats[roomId] = [];
         socket.emit("room-created", { roomId });
         console.log("user created the room");
     };
@@ -46,8 +52,20 @@ export const roomHandler = (socket: Socket) => {
     const stopSharing = (roomId: string) => {
         socket.to(roomId).emit("user-stopped-sharing");
     };
+
+    const addMessage = (roomId: string, message: IMessage) => {
+        console.log({ roomId, message });
+        if (chats[roomId]) {
+            chats[roomId].push(message);
+        } else {
+            chats[roomId] = [message];
+        }
+        console.log("send message back", chats[roomId]);
+        socket.to(roomId).emit("add-message", message);
+    };
     socket.on("create-room", createRoom);
     socket.on("join-room", joinRoom);
     socket.on("start-sharing", startSharing);
     socket.on("stop-sharing", stopSharing);
+    socket.on("send-message", addMessage);
 };

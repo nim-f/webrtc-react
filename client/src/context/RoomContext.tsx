@@ -5,6 +5,7 @@ import Peer from "peerjs";
 import { v4 as uuidV4 } from "uuid";
 import { peersReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
+import { IMessage } from "../types/chat";
 
 const WS = "http://localhost:8080";
 
@@ -56,6 +57,21 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             navigator.mediaDevices.getDisplayMedia({}).then(switchStream);
         }
     };
+
+    const sendMessage = (message: IMessage) => {
+        console.log("sendMessage", message);
+        const timestamp = new Date().getTime();
+        ws.emit("send-message", roomId, {
+            content: message,
+            author: me?.id,
+            timestamp,
+        });
+    };
+
+    const addMessage = (message: IMessage) => {
+        console.log({ message });
+    };
+
     useEffect(() => {
         const meId = uuidV4();
 
@@ -77,7 +93,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         ws.on("user-disconnected", removePeer);
         ws.on("user-started-sharing", (peerId) => setScreenSharingId(peerId));
         ws.on("user-stopped-sharing", () => setScreenSharingId(""));
-
+        ws.on("add-message", addMessage);
         return () => {
             ws.off("room-created");
             ws.off("get-users");
@@ -85,6 +101,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             ws.off("user-started-sharing");
             ws.off("user-stopped-sharing");
             ws.off("user-joined");
+            ws.off("add-message");
         };
     }, []);
 
@@ -101,14 +118,19 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         if (!stream) return;
 
         ws.on("user-joined", ({ peerId }) => {
+            console.log({ peerId, stream });
             const call = me.call(peerId, stream);
+            console.log("user-joined", call);
+
             call.on("stream", (peerStream) => {
+                console.log("stream");
                 dispatch(addPeerAction(peerId, peerStream));
             });
         });
 
         me.on("call", (call) => {
             call.answer(stream);
+            console.log({ stream });
             call.on("stream", (peerStream) => {
                 dispatch(addPeerAction(call.peer, peerStream));
             });
@@ -124,9 +146,10 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
                 me,
                 stream,
                 peers,
+                screenSharingId,
                 shareScreen,
                 setRoomId,
-                screenSharingId,
+                sendMessage,
             }}
         >
             {children}
