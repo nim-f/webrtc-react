@@ -1,19 +1,27 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useReducer, useState } from "react";
 import { useParams } from "react-router-dom";
 import classNames from "classnames";
 import { ChatButton } from "../components/chat/ChatButton";
 import { ShareScreenButton } from "../components/ShareScreeenButton";
 import { VideoPlayer } from "../components/VideoPlayer";
-import { PeerState } from "../context/peerReducer";
+import { PeerState } from "../reducer/peerReducer";
 import { RoomContext } from "../context/RoomContext";
 import { Chat } from "../components/chat/Chat";
 
 export const Room = () => {
     const { id } = useParams();
-    const { ws, me, stream, peers, shareScreen, screenSharingId, setRoomId } =
-        useContext(RoomContext);
+    const {
+        ws,
+        me,
+        stream,
+        peers,
+        shareScreen,
+        screenSharingId,
+        setRoomId,
+        chat,
+        toggleChat,
+    } = useContext(RoomContext);
 
-    const [isChatOpen, setChatOpen] = useState(false);
     useEffect(() => {
         if (me) ws.emit("join-room", { roomId: id, peerId: me._id });
     }, [id, me, ws]);
@@ -27,10 +35,6 @@ export const Room = () => {
         screenSharingId === me?.id ? stream : peers[screenSharingId]?.stream;
 
     const { [screenSharingId]: sharing, ...peersToShow } = peers;
-
-    const toggleChat = () => {
-        setChatOpen(!isChatOpen);
-    };
     return (
         <div className="flex flex-col min-h-screen">
             <div className="p-4 bg-red-500 text-white">Room id {id}</div>
@@ -43,8 +47,9 @@ export const Room = () => {
                 <div
                     className={classNames("grid gap-4", {
                         "w-1/5 grid-col-1": screenSharingVideo,
-                        "w-4/5 grid-cols-4": isChatOpen && !screenSharingVideo,
-                        "grid-cols-5": !isChatOpen && !screenSharingVideo,
+                        "w-4/5 grid-cols-4":
+                            chat.isChatOpen && !screenSharingVideo,
+                        "grid-cols-5": !chat.isChatOpen && !screenSharingVideo,
                     })}
                 >
                     {screenSharingId !== me?.id && (
@@ -56,7 +61,7 @@ export const Room = () => {
                     ))}
                 </div>
 
-                {isChatOpen && (
+                {chat.isChatOpen && (
                     <div className="w-1/5 border-l-2 p-2 mb-28">
                         <Chat />
                     </div>

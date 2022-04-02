@@ -22,16 +22,15 @@ export const roomHandler = (socket: Socket) => {
         console.log("user created the room");
     };
     const joinRoom = ({ roomId, peerId }: IRoomParams) => {
-        if (rooms[roomId]) {
-            console.log("user joined the room", roomId, peerId);
-            rooms[roomId].push(peerId);
-            socket.join(roomId);
-            socket.to(roomId).emit("user-joined", { peerId });
-            socket.emit("get-users", {
-                roomId,
-                participants: rooms[roomId],
-            });
-        }
+        if (!rooms[roomId]) rooms[roomId] = [];
+        console.log("user joined the room", roomId, peerId);
+        rooms[roomId].push(peerId);
+        socket.join(roomId);
+        socket.to(roomId).emit("user-joined", { peerId });
+        socket.emit("get-users", {
+            roomId,
+            participants: rooms[roomId],
+        });
 
         socket.on("disconnect", () => {
             console.log("user left the room", peerId);

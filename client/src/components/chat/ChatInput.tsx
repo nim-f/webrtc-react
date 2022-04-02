@@ -9,6 +9,7 @@ export const ChatInput: React.FC = ({}) => {
             onSubmit={(e) => {
                 e.preventDefault();
                 sendMessage(message);
+                setMessage("");
             }}
         >
             <textarea

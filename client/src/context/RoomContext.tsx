@@ -3,8 +3,10 @@ import socketIOClient from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
 import { v4 as uuidV4 } from "uuid";
-import { peersReducer } from "./peerReducer";
-import { addPeerAction, removePeerAction } from "./peerActions";
+import { peersReducer } from "../reducer/peerReducer";
+import { chatReducer } from "../reducer/chatReducer";
+import { addPeerAction, removePeerAction } from "../reducer/peerActions";
+import { addMessageAction, toggleChatAction } from "../reducer/chatActions";
 import { IMessage } from "../types/chat";
 
 const WS = "http://localhost:8080";
@@ -18,8 +20,15 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const [me, setMe] = useState<Peer>();
     const [stream, setStream] = useState<MediaStream>();
     const [peers, dispatch] = useReducer(peersReducer, {});
+    const [chat, dispatchChat] = useReducer(chatReducer, {
+        messages: [],
+        newMessages: 0,
+        isChatOpen: false,
+    });
     const [screenSharingId, setScreenSharingId] = useState<string>("");
     const [roomId, setRoomId] = useState<string>();
+
+    console.log({ chat });
 
     const enterRoom = ({ roomId }: { roomId: "string" }) => {
         console.log({ roomId });
@@ -58,18 +67,25 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         }
     };
 
-    const sendMessage = (message: IMessage) => {
+    const sendMessage = (message: string) => {
         console.log("sendMessage", message);
         const timestamp = new Date().getTime();
-        ws.emit("send-message", roomId, {
+        const messageData = {
             content: message,
             author: me?.id,
             timestamp,
-        });
+        };
+        ws.emit("send-message", roomId, messageData);
+        dispatchChat(addMessageAction(messageData));
     };
 
     const addMessage = (message: IMessage) => {
         console.log({ message });
+        dispatchChat(addMessageAction(message));
+    };
+
+    const toggleChat = () => {
+        dispatchChat(toggleChatAction(!chat.isChatOpen));
     };
 
     useEffect(() => {
@@ -150,10 +166,12 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
                 me,
                 stream,
                 peers,
+                chat,
                 screenSharingId,
                 shareScreen,
                 setRoomId,
                 sendMessage,
+                toggleChat,
             }}
         >
             {children}
