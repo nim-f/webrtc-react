@@ -59,7 +59,11 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     useEffect(() => {
         const meId = uuidV4();
 
-        const peer = new Peer(meId);
+        const peer = new Peer(meId, {
+            host: "localhost",
+            port: 9001,
+            path: "/",
+        });
         setMe(peer);
 
         try {

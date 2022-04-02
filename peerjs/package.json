@@ -1,0 +1,23 @@
+{
+  "name": "webrtc-react",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "author": "Anna",
+  "license": "MIT",
+  "scripts": {
+    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prestart": "yarn build",
+    "start": "nodemon .",
+    "dev": "concurrently --kill-others \"yarn watch\" \"yarn start\""
+  },
+  "dependencies": {
+    "peer": "^0.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.18",
+    "tslint": "^6.1.3",
+    "typescript": "^4.5.5"
+  }
+}
