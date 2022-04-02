@@ -59,7 +59,13 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     useEffect(() => {
         const meId = uuidV4();
 
-        const peer = new Peer(meId);
+        const peer = new Peer(meId, {
+            // secure: true,
+            host: "localhost", // change here the herokuapp name
+            port: 9001,
+            path: "/",
+            debug: 2,
+        });
         setMe(peer);
 
         try {
@@ -101,17 +107,25 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         if (!stream) return;
 
         ws.on("user-joined", ({ peerId }) => {
-            const call = me.call(peerId, stream);
-            call.on("stream", (peerStream) => {
-                dispatch(addPeerAction(peerId, peerStream));
-            });
+            try {
+                const call = me.call(peerId, stream);
+                call.on("stream", (peerStream) => {
+                    dispatch(addPeerAction(peerId, peerStream));
+                });
+            } catch (err) {
+                console.error(err);
+            }
         });
 
         me.on("call", (call) => {
-            call.answer(stream);
-            call.on("stream", (peerStream) => {
-                dispatch(addPeerAction(call.peer, peerStream));
-            });
+            try {
+                call.answer(stream);
+                call.on("stream", (peerStream) => {
+                    dispatch(addPeerAction(call.peer, peerStream));
+                });
+            } catch (err) {
+                console.error(err);
+            }
         });
     }, [me, stream]);
 
