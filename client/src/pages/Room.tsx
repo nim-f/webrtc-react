@@ -12,6 +12,8 @@ export const Room = () => {
     const {
         ws,
         me,
+        userName,
+        setUserName,
         stream,
         peers,
         shareScreen,
@@ -22,18 +24,23 @@ export const Room = () => {
     } = useContext(RoomContext);
 
     useEffect(() => {
-        if (me) ws.emit("join-room", { roomId: id, peerId: me._id });
-    }, [id, me, ws]);
+        if (me && stream)
+            ws.emit("join-room", { roomId: id, peerId: me._id, userName });
+    }, [id, me, userName, ws, stream]);
 
     useEffect(() => {
         setRoomId(id);
     }, [id, setRoomId]);
 
-    console.log({ screenSharingId });
     const screenSharingVideo =
         screenSharingId === me?.id ? stream : peers[screenSharingId]?.stream;
 
-    const { [screenSharingId]: sharing, ...peersToShow } = peers;
+    const {
+        [screenSharingId]: sharing,
+        [me?.id]: meVideo,
+        ...peersToShow
+    } = peers;
+
     return (
         <div className="flex flex-col min-h-screen">
             <div className="bg-red-500 p-4 text-white">Room id {id}</div>
@@ -49,12 +56,25 @@ export const Room = () => {
                     }`}
                 >
                     {screenSharingId !== me?.id && (
-                        <VideoPlayer stream={stream} />
+                        <div>
+                            <VideoPlayer stream={stream} />
+                            <input
+                                className="border rounded-md p-2 h-10 my-2 w-full"
+                                placeholder="Enter your name"
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
+                            />
+                        </div>
                     )}
 
-                    {Object.values(peersToShow as PeerState).map((peer) => (
-                        <VideoPlayer stream={peer.stream} />
-                    ))}
+                    {Object.values(peersToShow as PeerState)
+                        .filter((peer) => !!peer.stream)
+                        .map((peer) => (
+                            <div>
+                                <VideoPlayer stream={peer.stream} />
+                                <div>{peer.userName}</div>
+                            </div>
+                        ))}
                 </div>
                 {chat.isChatOpen && (
                     <div className="border-l-2 pb-28">

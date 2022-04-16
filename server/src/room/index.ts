@@ -1,12 +1,15 @@
 import { Socket } from "socket.io";
 import { v4 as uuidV4 } from "uuid";
 
-const rooms: Record<string, string[]> = {};
+const rooms: Record<string, Record<string, IUser>> = {};
 const chats: Record<string, IMessage[]> = {};
 
 interface IRoomParams {
     roomId: string;
     peerId: string;
+}
+interface IJoinRoomParams extends IRoomParams {
+    userName: string;
 }
 interface IMessage {
     content: string;
@@ -14,20 +17,28 @@ interface IMessage {
     timestamp: number;
 }
 
+interface IUser {
+    peerId: string;
+    userName: string;
+}
+
 export const roomHandler = (socket: Socket) => {
     const createRoom = () => {
         const roomId = uuidV4();
-        rooms[roomId] = [];
+        rooms[roomId] = {};
         socket.emit("room-created", { roomId });
         console.log("user created the room");
     };
-    const joinRoom = ({ roomId, peerId }: IRoomParams) => {
-        if (!rooms[roomId]) rooms[roomId] = [];
+    const joinRoom = ({ roomId, peerId, userName }: IJoinRoomParams) => {
+        if (!rooms[roomId]) rooms[roomId] = {};
+        if (!chats[roomId]) chats[roomId] = [];
+
         socket.emit("get-messages", chats[roomId]);
         console.log("user joined the room", roomId, peerId);
-        rooms[roomId].push(peerId);
+        rooms[roomId][peerId] = { peerId, userName };
         socket.join(roomId);
-        socket.to(roomId).emit("user-joined", { peerId });
+        console.log("join-room");
+        socket.to(roomId).emit("user-joined", { peerId, userName });
         socket.emit("get-users", {
             roomId,
             participants: rooms[roomId],
@@ -40,7 +51,8 @@ export const roomHandler = (socket: Socket) => {
     };
 
     const leaveRoom = ({ peerId, roomId }: IRoomParams) => {
-        rooms[roomId] = rooms[roomId]?.filter((id) => id !== peerId);
+        // const { [peerId]: deleted, ...rest } = rooms[roomId];
+        // rooms[roomId] = rest;
         socket.to(roomId).emit("user-disconnected", peerId);
     };
 
