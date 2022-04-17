@@ -1,43 +1,37 @@
 import { useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ShareScreenButton } from "../components/ShareScreeenButton";
-import { ChatButton } from "../components/ChatButton";
+import { ChatButton } from "../components/chat/ChatButton";
 import { VideoPlayer } from "../components/VideoPlayer";
+import { Chat } from "../components/chat/Chat";
 import { PeerState } from "../reducers/peerReducer";
 import { RoomContext } from "../context/RoomContext";
-import { Chat } from "../components/chat/Chat";
+import { UserContext } from "../context/UserContext";
+import { ChatContext } from "../context/ChatContext";
+import { ws } from "../ws";
 
 export const Room = () => {
     const { id } = useParams();
-    const {
-        ws,
-        me,
-        userName,
-        setUserName,
-        stream,
-        peers,
-        shareScreen,
-        screenSharingId,
-        setRoomId,
-        toggleChat,
-        chat,
-    } = useContext(RoomContext);
+    const { stream, peers, shareScreen, screenSharingId, setRoomId } =
+        useContext(RoomContext);
+    const { userName, setUserName, userId } = useContext(UserContext);
+    const { toggleChat, chat } = useContext(ChatContext);
 
     useEffect(() => {
-        if (me && stream)
-            ws.emit("join-room", { roomId: id, peerId: me._id, userName });
-    }, [id, me, userName, ws, stream]);
+        if (stream)
+            ws.emit("join-room", { roomId: id, peerId: userId, userName });
+    }, [id, userId, userName, stream]);
 
     useEffect(() => {
         setRoomId(id);
     }, [id, setRoomId]);
 
     const screenSharingVideo =
-        screenSharingId === me?.id ? stream : peers[screenSharingId]?.stream;
+        screenSharingId === userId ? stream : peers[screenSharingId]?.stream;
 
     const {
         [screenSharingId]: sharing,
-        [me?.id]: meVideo,
+        [userId]: meVideo,
         ...peersToShow
     } = peers;
 
@@ -55,7 +49,7 @@ export const Room = () => {
                         screenSharingVideo ? "w-1/5 grid-col-1" : "grid-cols-4"
                     }`}
                 >
-                    {screenSharingId !== me?.id && (
+                    {screenSharingId !== userId && (
                         <div>
                             <VideoPlayer stream={stream} />
                             <input
@@ -70,7 +64,7 @@ export const Room = () => {
                     {Object.values(peersToShow as PeerState)
                         .filter((peer) => !!peer.stream)
                         .map((peer) => (
-                            <div>
+                            <div key={peer.peerId}>
                                 <VideoPlayer stream={peer.stream} />
                                 <div>{peer.userName}</div>
                             </div>

@@ -7,7 +7,7 @@ import {
 
 export type PeerState = Record<
     string,
-    { stream?: MediaStream; userName: string }
+    { stream?: MediaStream; userName: string; peerId: string }
 >;
 type PeerAction =
     | {
@@ -24,7 +24,9 @@ type PeerAction =
       }
     | {
           type: typeof ADD_ALL_PEERS;
-          payload: { peers: Record<string, { userName: string }> };
+          payload: {
+              peers: Record<string, { userName: string; peerId: string }>;
+          };
       };
 
 export const peersReducer = (state: PeerState, action: PeerAction) => {
@@ -35,6 +37,7 @@ export const peersReducer = (state: PeerState, action: PeerAction) => {
                 [action.payload.peerId]: {
                     ...state[action.payload.peerId],
                     stream: action.payload.stream,
+                    peerId: action.payload.peerId,
                 },
             };
         case ADD_PEER_NAME:
@@ -43,6 +46,7 @@ export const peersReducer = (state: PeerState, action: PeerAction) => {
                 [action.payload.peerId]: {
                     ...state[action.payload.peerId],
                     userName: action.payload.userName,
+                    peerId: action.payload.peerId,
                 },
             };
         case REMOVE_PEER_STREAM:

@@ -1,8 +1,11 @@
 import { useContext, FormEvent } from "react";
 import { RoomContext } from "../context/RoomContext";
+import { UserContext } from "../context/UserContext";
+import { Button } from "./common/Button";
 
 export const Join: React.FC = () => {
-    const { createRoom, userName, setUserName } = useContext(RoomContext);
+    const { userName, setUserName } = useContext(UserContext);
+    const { createRoom } = useContext(RoomContext);
 
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -17,12 +20,7 @@ export const Join: React.FC = () => {
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
             />
-            <button
-                type="submit"
-                className="bg-rose-400 py-2 px-8 rounded-lg text-xl hover:bg-rose-600 text-white"
-            >
-                Start new meeting
-            </button>
+            <Button className="py-2 px-8 text-xl">Start new meeting</Button>
         </form>
     );
 };

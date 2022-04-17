@@ -17,7 +17,7 @@ export const removePeerAction = (peerId: string) => ({
 });
 
 export const addAllParticipants = (
-    peers: Record<string, { userName: string }>
+    peers: Record<string, { userName: string; peerId: string }>
 ) => ({
     type: ADD_ALL_PEERS,
     payload: { peers },

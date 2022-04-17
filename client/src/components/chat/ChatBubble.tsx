@@ -9,7 +9,6 @@ export const ChatBubble: React.FC<{ message: IMessage }> = ({ message }) => {
     const author = message.author && peers[message.author];
     const authorUserName = author?.userName || "Anonymous";
     const time = new Date(message.timestamp).toLocaleTimeString();
-    console.log({ author });
 
     return (
         <div
