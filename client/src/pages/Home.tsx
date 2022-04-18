@@ -1,4 +1,4 @@
-import { Join } from "../components/CreateButton";
+import { Join } from "../components/Join";
 
 export const Home = () => {
     return (
