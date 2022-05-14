@@ -1,3 +1,5 @@
+import { IPeer } from "../types/peer";
+
 export const ADD_PEER_STREAM = "ADD_PEER_STREAM" as const;
 export const REMOVE_PEER_STREAM = "REMOVE_PEER_STREAM" as const;
 export const ADD_PEER_NAME = "ADD_PEER_NAME" as const;
@@ -16,9 +18,7 @@ export const removePeerStreamAction = (peerId: string) => ({
     payload: { peerId },
 });
 
-export const addAllPeersAction = (
-    peers: Record<string, { userName: string }>
-) => ({
+export const addAllPeersAction = (peers: Record<string, IPeer>) => ({
     type: ADD_ALL_PEERS,
     payload: { peers },
 });

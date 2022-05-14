@@ -1,8 +1,8 @@
 import { useContext } from "react";
-import { RoomContext } from "../context/RoomContext";
+import { UserContext } from "../context/UserContext";
 
-export const NameInput: React.FC = ({}) => {
-    const { userName, setUserName } = useContext(RoomContext);
+export const NameInput: React.FC = () => {
+    const { userName, setUserName } = useContext(UserContext);
     return (
         <input
             className="border rounded-md p-2 h-10 my-2 w-full"

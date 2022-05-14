@@ -1,54 +1,58 @@
-import { createContext, useEffect, useState, useReducer } from "react";
-import socketIOClient from "socket.io-client";
+import {
+    createContext,
+    useEffect,
+    useState,
+    useReducer,
+    useContext,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
-import { v4 as uuidV4 } from "uuid";
-import { peersReducer } from "../reducers/peerReducer";
+import { ws } from "../ws";
+import { peersReducer, PeerState } from "../reducers/peerReducer";
 import {
     addPeerStreamAction,
     addPeerNameAction,
     removePeerStreamAction,
     addAllPeersAction,
 } from "../reducers/peerActions";
-import { IMessage } from "../types/chat";
-import { chatReducer } from "../reducers/chatReducer";
-import {
-    addHistoryAction,
-    addMessageAction,
-    toggleChatAction,
-} from "../reducers/chatActions";
 
-const WS = "http://localhost:8080";
+import { UserContext } from "./UserContext";
+import { IPeer } from "../types/peer";
 
-export const RoomContext = createContext<null | any>(null);
+interface RoomValue {
+    stream?: MediaStream;
+    peers: PeerState;
+    shareScreen: () => void;
+    roomId: string;
+    setRoomId: (id: string) => void;
+    screenSharingId: string;
+}
 
-const ws = socketIOClient(WS);
+export const RoomContext = createContext<RoomValue>({
+    peers: {},
+    shareScreen: () => {},
+    setRoomId: (id) => {},
+    screenSharingId: "",
+    roomId: "",
+});
 
 export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const navigate = useNavigate();
+    const { userName, userId } = useContext(UserContext);
     const [me, setMe] = useState<Peer>();
-    const [userName, setUserName] = useState(
-        localStorage.getItem("userName") || ""
-    );
     const [stream, setStream] = useState<MediaStream>();
     const [peers, dispatch] = useReducer(peersReducer, {});
-    const [chat, chatDispatch] = useReducer(chatReducer, {
-        messages: [],
-        isChatOpen: false,
-    });
     const [screenSharingId, setScreenSharingId] = useState<string>("");
-    const [roomId, setRoomId] = useState<string>();
+    const [roomId, setRoomId] = useState<string>("");
 
     const enterRoom = ({ roomId }: { roomId: "string" }) => {
-        console.log({ roomId });
         navigate(`/room/${roomId}`);
     };
     const getUsers = ({
         participants,
     }: {
-        participants: Record<string, { userName: string }>;
+        participants: Record<string, IPeer>;
     }) => {
-        console.log({ participants });
         dispatch(addAllPeersAction(participants));
     };
 
@@ -63,7 +67,6 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             const videoTrack = stream
                 ?.getTracks()
                 .find((track) => track.kind === "video");
-            console.log(connection[0].peerConnection.getSenders()[1]);
             connection[0].peerConnection
                 .getSenders()[1]
                 .replaceTrack(videoTrack)
@@ -81,30 +84,6 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         }
     };
 
-    const sendMessage = (message: string) => {
-        const messageData: IMessage = {
-            content: message,
-            timestamp: new Date().getTime(),
-            author: me?.id,
-        };
-        chatDispatch(addMessageAction(messageData));
-
-        ws.emit("send-message", roomId, messageData);
-    };
-
-    const addMessage = (message: IMessage) => {
-        console.log("new message", message);
-        chatDispatch(addMessageAction(message));
-    };
-
-    const addHistory = (messages: IMessage[]) => {
-        chatDispatch(addHistoryAction(messages));
-    };
-
-    const toggleChat = () => {
-        chatDispatch(toggleChatAction(!chat.isChatOpen));
-    };
-
     const nameChangedHandler = ({
         peerId,
         userName,
@@ -116,20 +95,11 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     };
 
     useEffect(() => {
-        localStorage.setItem("userName", userName);
-    }, [userName]);
+        ws.emit("change-name", { peerId: userId, userName, roomId });
+    }, [userName, userId, roomId]);
 
     useEffect(() => {
-        ws.emit("change-name", { peerId: me?.id, userName, roomId });
-    }, [userName, me, roomId]);
-
-    useEffect(() => {
-        const savedId = localStorage.getItem("userId");
-        const meId = savedId || uuidV4();
-        console.log({ savedId, meId });
-        localStorage.setItem("userId", meId);
-
-        const peer = new Peer(meId, {
+        const peer = new Peer(userId, {
             host: "localhost",
             port: 9001,
             path: "/",
@@ -151,8 +121,6 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         ws.on("user-disconnected", removePeer);
         ws.on("user-started-sharing", (peerId) => setScreenSharingId(peerId));
         ws.on("user-stopped-sharing", () => setScreenSharingId(""));
-        ws.on("add-message", addMessage);
-        ws.on("get-messages", addHistory);
         ws.on("name-changed", nameChangedHandler);
 
         return () => {
@@ -162,10 +130,10 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             ws.off("user-started-sharing");
             ws.off("user-stopped-sharing");
             ws.off("user-joined");
-            ws.off("add-message");
             ws.off("name-changed");
             me?.disconnect();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -205,23 +173,15 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         };
     }, [me, stream, userName]);
 
-    console.log({ peers });
-
     return (
         <RoomContext.Provider
             value={{
-                ws,
-                me,
                 stream,
                 peers,
-                chat,
                 shareScreen,
+                roomId,
                 setRoomId,
-                sendMessage,
-                toggleChat,
                 screenSharingId,
-                userName,
-                setUserName,
             }}
         >
             {children}

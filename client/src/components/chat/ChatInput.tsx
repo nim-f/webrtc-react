@@ -1,15 +1,20 @@
 import { useContext, useState } from "react";
+import { ChatContext } from "../../context/ChatContext";
 import { RoomContext } from "../../context/RoomContext";
+import { UserContext } from "../../context/UserContext";
+import { Button } from "../common/Button";
 
 export const ChatInput: React.FC = () => {
     const [message, setMessage] = useState("");
-    const { sendMessage } = useContext(RoomContext);
+    const { sendMessage } = useContext(ChatContext);
+    const { userId } = useContext(UserContext);
+    const { roomId } = useContext(RoomContext);
     return (
         <div>
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
-                    sendMessage(message);
+                    sendMessage(message, roomId, userId);
                     setMessage("");
                 }}
             >
@@ -19,7 +24,7 @@ export const ChatInput: React.FC = () => {
                         onChange={(e) => setMessage(e.target.value)}
                         value={message}
                     />
-                    <button
+                    <Button
                         type="submit"
                         className="bg-rose-400 p-4 mx-2 rounded-lg text-xl hover:bg-rose-600 text-white"
                     >
@@ -38,7 +43,7 @@ export const ChatInput: React.FC = () => {
                                 d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                             />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>
