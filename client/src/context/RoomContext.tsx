@@ -47,6 +47,8 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const [screenSharingId, setScreenSharingId] = useState<string>("");
     const [roomId, setRoomId] = useState<string>("");
 
+    console.log({ peers });
+
     const enterRoom = ({ roomId }: { roomId: "string" }) => {
         navigate(`/room/${roomId}`);
     };
