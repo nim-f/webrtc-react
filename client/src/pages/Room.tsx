@@ -13,11 +13,10 @@ import { ChatContext } from "../context/ChatContext";
 
 export const Room = () => {
     const { id } = useParams();
-    const { stream, peers, shareScreen, screenSharingId, setRoomId } =
+    const { stream, screen, peers, shareScreen, screenSharingId, setRoomId } =
         useContext(RoomContext);
     const { userName, userId } = useContext(UserContext);
     const { toggleChat, chat } = useContext(ChatContext);
-
     useEffect(() => {
         if (stream)
             ws.emit("join-room", { roomId: id, peerId: userId, userName });
@@ -28,7 +27,7 @@ export const Room = () => {
     }, [id, setRoomId]);
 
     const screenSharingVideo =
-        screenSharingId === userId ? stream : peers[screenSharingId]?.stream;
+        screenSharingId === userId ? screen : peers[screenSharingId]?.stream;
 
     const { [screenSharingId]: sharing, ...peersToShow } = peers;
     return (
