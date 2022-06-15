@@ -21,6 +21,7 @@ import { IPeer } from "../types/peer";
 
 interface RoomValue {
     stream?: MediaStream;
+    screenStream?: MediaStream;
     peers: PeerState;
     shareScreen: () => void;
     roomId: string;
@@ -41,6 +42,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const { userName, userId } = useContext(UserContext);
     const [me, setMe] = useState<Peer>();
     const [stream, setStream] = useState<MediaStream>();
+    const [screenStream, setScreenStream] = useState<MediaStream>();
     const [peers, dispatch] = useReducer(peersReducer, {});
     const [screenSharingId, setScreenSharingId] = useState<string>("");
     const [roomId, setRoomId] = useState<string>("");
@@ -61,14 +63,14 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     };
 
     const switchStream = (stream: MediaStream) => {
-        setStream(stream);
         setScreenSharingId(me?.id || "");
         Object.values(me?.connections).forEach((connection: any) => {
-            const videoTrack = stream
+            const videoTrack: any = stream
                 ?.getTracks()
                 .find((track) => track.kind === "video");
             connection[0].peerConnection
-                .getSenders()[1]
+                .getSenders()
+                .find((sender: any) => sender.track.kind === "video")
                 .replaceTrack(videoTrack)
                 .catch((err: any) => console.error(err));
         });
@@ -80,7 +82,10 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
                 .getUserMedia({ video: true, audio: true })
                 .then(switchStream);
         } else {
-            navigator.mediaDevices.getDisplayMedia({}).then(switchStream);
+            navigator.mediaDevices.getDisplayMedia({}).then((stream) => {
+                switchStream(stream);
+                setScreenStream(stream);
+            });
         }
     };
 
@@ -177,6 +182,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         <RoomContext.Provider
             value={{
                 stream,
+                screenStream,
                 peers,
                 shareScreen,
                 roomId,
