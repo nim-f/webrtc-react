@@ -39,6 +39,7 @@ export const ChatProvider: React.FC = ({ children }) => {
     };
 
     const addMessage = (message: IMessage) => {
+        console.log({ message });
         chatDispatch(addMessageAction(message));
     };
 

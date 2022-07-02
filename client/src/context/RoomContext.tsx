@@ -37,6 +37,10 @@ export const RoomContext = createContext<RoomValue>({
     roomId: "",
 });
 
+if (!!window.Cypress) {
+    window.Peer = Peer;
+}
+
 export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const navigate = useNavigate();
     const { userName, userId } = useContext(UserContext);
@@ -153,6 +157,8 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         if (!me) return;
         if (!stream) return;
         ws.on("user-joined", ({ peerId, userName: name }) => {
+            dispatch(addPeerNameAction(peerId, name));
+
             const call = me.call(peerId, stream, {
                 metadata: {
                     userName,
@@ -161,7 +167,6 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             call.on("stream", (peerStream) => {
                 dispatch(addPeerStreamAction(peerId, peerStream));
             });
-            dispatch(addPeerNameAction(peerId, name));
         });
 
         me.on("call", (call) => {
