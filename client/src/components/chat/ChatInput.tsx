@@ -25,6 +25,7 @@ export const ChatInput: React.FC = () => {
                         value={message}
                     />
                     <Button
+                        testId="send-msg-button"
                         type="submit"
                         className="bg-rose-400 p-4 mx-2 rounded-lg text-xl hover:bg-rose-600 text-white"
                     >

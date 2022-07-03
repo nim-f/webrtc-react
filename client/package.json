@@ -24,6 +24,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "e2e": "cypress open --e2e --browser chrome",
+    "start:all": "concurrently --kill-others  \"yarn start:peer\" \"yarn start:server\" \" yarn start\"",
+    "start:peer": "yarn --cwd ../peerjs  dev",
+    "start:server": "yarn --cwd ../server dev",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -49,6 +53,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.2",
+    "cypress": "^10.3.0",
     "postcss": "^8.4.7",
     "tailwindcss": "^3.0.23"
   }

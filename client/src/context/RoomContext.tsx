@@ -37,6 +37,10 @@ export const RoomContext = createContext<RoomValue>({
     roomId: "",
 });
 
+if (!!window.Cypress) {
+    window.Peer = Peer;
+}
+
 export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const navigate = useNavigate();
     const { userName, userId } = useContext(UserContext);
