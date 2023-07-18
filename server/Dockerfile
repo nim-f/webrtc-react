@@ -1,5 +1,5 @@
 FROM node:18-alpine
-WORKDIR /peerjs
+WORKDIR /ws
 
 COPY package.json ./
 COPY yarn.lock ./
@@ -12,5 +12,5 @@ RUN yarn build
 
 CMD ["node", "."]
 
-EXPOSE 9001
+EXPOSE 8080
 
